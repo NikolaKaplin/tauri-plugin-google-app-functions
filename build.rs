@@ -1,10 +1,8 @@
-const COMMANDS: &[&str] = &["ping"];
+// The plugin has no commands: agents call app functions through Android, not the webview.
+const COMMANDS: &[&str] = &[];
 
 fn main() {
-  tauri_plugin::Builder::new(COMMANDS)
-    .android_path("android")
-    .ios_path("ios")
-    .build();
+  tauri_plugin::Builder::new(COMMANDS).android_path("android").build();
 
   // Test binaries link tauri, which needs Common Controls v6 on Windows; without this manifest
   // they exit with STATUS_ENTRYPOINT_NOT_FOUND.

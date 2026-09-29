@@ -1,16 +1,5 @@
 <script>
   import Greet from './lib/Greet.svelte'
-  import { ping } from 'tauri-plugin-google-app-functions-api'
-
-	let response = $state('')
-
-	function updateResponse(returnValue) {
-		response += `[${new Date().toLocaleTimeString()}] ` + (typeof returnValue === 'string' ? returnValue : JSON.stringify(returnValue)) + '<br>'
-	}
-
-	function _ping() {
-		ping("Pong!").then(updateResponse).catch(updateResponse)
-	}
 </script>
 
 <main class="container">
@@ -34,11 +23,6 @@
 
   <div class="row">
     <Greet />
-  </div>
-
-  <div>
-    <button onclick="{_ping}">Ping</button>
-    <div>{@html response}</div>
   </div>
 
 </main>
