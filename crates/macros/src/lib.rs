@@ -15,7 +15,8 @@ use syn::{
 /// README). A parameter of type `tauri::AppHandle` is injected rather than exposed. The return
 /// type may be `Result<T, E>` with `E: Into<AppFunctionError>`.
 ///
-/// Doc comments become the KDoc agents read; document parameters in a `# Arguments` section.
+/// Doc comments become the descriptions agents read; document parameters in a `# Arguments`
+/// section.
 #[proc_macro_attribute]
 pub fn app_function(attr: TokenStream, item: TokenStream) -> TokenStream {
   if !attr.is_empty() {
@@ -33,7 +34,7 @@ pub fn app_function(attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 /// Derives the serde impls needed to pass a struct to or from an app function, and marks it
-/// for the Kotlin generator, which emits a matching `@AppFunctionSerializable` data class.
+/// for the schema generator, which describes it as an AppFunctions object.
 #[proc_macro_attribute]
 pub fn app_function_serializable(attr: TokenStream, item: TokenStream) -> TokenStream {
   if !attr.is_empty() {

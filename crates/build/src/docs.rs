@@ -1,7 +1,6 @@
-//! Converts rustdoc comments into KDoc, which AppFunctions (`isDescribedByKDoc = true`) turns
-//! into the descriptions agents read.
+//! Splits rustdoc comments into the function, parameter and return descriptions agents read.
 
-/// Rustdoc split into the parts KDoc keeps apart.
+/// Rustdoc split into the parts the AppFunctions schema keeps apart.
 #[derive(Debug, Default)]
 pub struct Docs {
   pub description: Vec<String>,
@@ -106,35 +105,6 @@ fn parse_param_bullet(line: &str) -> Option<(String, String)> {
     .trim_start_matches(['-', ':', '–', '—'])
     .trim();
   Some((name.trim_start_matches("r#").to_owned(), description.to_owned()))
-}
-
-/// Renders a KDoc block, indented by `indent`. Returns an empty string when there is nothing
-/// to document.
-pub fn render_kdoc(indent: &str, description: &[String], tags: &[String]) -> String {
-  if description.is_empty() && tags.is_empty() {
-    return String::new();
-  }
-  let mut lines: Vec<String> = description.iter().map(|l| sanitize(l)).collect();
-  if !tags.is_empty() {
-    if !lines.is_empty() {
-      lines.push(String::new());
-    }
-    lines.extend(tags.iter().map(|t| sanitize(t)));
-  }
-  let mut out = format!("{indent}/**\n");
-  for line in lines {
-    if line.is_empty() {
-      out.push_str(&format!("{indent} *\n"));
-    } else {
-      out.push_str(&format!("{indent} * {line}\n"));
-    }
-  }
-  out.push_str(&format!("{indent} */\n"));
-  out
-}
-
-fn sanitize(line: &str) -> String {
-  line.replace("*/", "* /").trim_end().to_owned()
 }
 
 #[cfg(test)]

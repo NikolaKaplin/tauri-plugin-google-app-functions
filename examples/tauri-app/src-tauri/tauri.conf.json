@@ -1,5 +1,5 @@
 {
-  "productName": "tauri-app",
+  "productName": "Tauri Todo",
   "version": "0.1.0",
   "identifier": "com.tauri.dev",
   "build": {
@@ -16,10 +16,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 820,
         "resizable": true,
-        "title": "tauri-app",
-        "width": 800
+        "title": "Tauri Todo",
+        "width": 440
       }
     ]
   },

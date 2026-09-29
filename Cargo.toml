@@ -1,11 +1,16 @@
 [package]
 name = "tauri-plugin-google-app-functions"
 version = "0.1.0"
-authors = [ "Rizo" ]
+authors = ["NikolaKaplin (https://github.com/NikolaKaplin)"]
 description = "Expose Rust functions of a Tauri app as Android AppFunctions"
+repository = "https://github.com/NikolaKaplin/tauri-plugin-google-app-functions"
+license = "MIT"
+readme = "README.md"
+keywords = ["tauri", "tauri-plugin", "android", "gemini", "app-functions"]
+categories = ["gui", "os::android-apis", "api-bindings"]
 edition = "2024"
 rust-version = "1.90"
-exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
+exclude = ["/examples", "/.claude", "/.github", "/.vscode"]
 links = "tauri-plugin-google-app-functions"
 
 [workspace]

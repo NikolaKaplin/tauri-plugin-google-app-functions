@@ -11,8 +11,6 @@ android {
 
     defaultConfig {
         minSdk = 24 // androidx.appfunctions requires 24
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -29,14 +27,20 @@ kotlin {
 }
 
 dependencies {
-    // `api` so the app module compiles the generated @AppFunction service against it.
-    // The app module runs KSP with androidx.appfunctions:appfunctions-compiler of the same version.
-    api("androidx.appfunctions:appfunctions:1.0.0-alpha12")
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.6.0")
-    implementation("com.google.android.material:material:1.7.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    // Supplies the app_functions_schema.xsd asset and the matching manifest property.
+    implementation("androidx.appfunctions:appfunctions:1.0.0-alpha12")
     implementation(project(":tauri-android"))
+}
+
+// tauri-plugin-google-app-functions-build writes the AppFunctions schema and app description
+// into the app module from build.rs, which runs in the `rustBuild*` tasks of the Tauri Gradle
+// plugin (id "rust"). The app must merge its assets and resources after them.
+rootProject.allprojects {
+    pluginManager.withPlugin("rust") {
+        val rustBuild = tasks.matching { it.name.startsWith("rustBuild") }
+        tasks.matching {
+            it.name.startsWith("merge") &&
+                (it.name.endsWith("Assets") || it.name.endsWith("Resources"))
+        }.configureEach { mustRunAfter(rustBuild) }
+    }
 }

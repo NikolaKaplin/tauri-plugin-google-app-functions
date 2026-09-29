@@ -23,5 +23,3 @@
 -keep class com.plugin.google_app_functions.AppFunctionsBridge {
     native <methods>;
 }
-# Generated app function service and its serializable data classes.
--keep class com.plugin.google_app_functions.generated.** { *; }
