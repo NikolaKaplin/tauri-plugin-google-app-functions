@@ -1,7 +1,7 @@
 [package]
 name = "tauri-plugin-google-app-functions-macros"
 version = "0.1.0"
-authors = [ "Rizo" ]
+authors = ["NikolaKaplin (https://github.com/NikolaKaplin)"]
 description = "Procedural macros for tauri-plugin-google-app-functions"
 edition = "2024"
 rust-version = "1.90"
