@@ -107,12 +107,11 @@ fn generates_android_files() {
   assert!(metadata.contains("appfn:description=\"Manages &quot;tasks&quot; &amp; more\""));
   assert!(!kotlin.join("TauriAppFunctions.kt").exists(), "stale KSP input must be removed");
 
-  // The schema of the example app matches, byte for byte, what the androidx.appfunctions KSP
-  // compiler produced for the equivalent Kotlin.
-  let example_src =
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/tauri-app/src-tauri/src");
+  // For the sources in fixtures/ksp_src, the schema matches, byte for byte, what the
+  // androidx.appfunctions KSP compiler produced for the equivalent Kotlin.
+  let ksp_src = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/ksp_src");
   tauri_plugin_google_app_functions_build::Builder::new()
-    .source_dir(&example_src)
+    .source_dir(&ksp_src)
     .try_build()
     .unwrap();
   let expected = read(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/ksp_tauri_app_functions.xml").as_path())
