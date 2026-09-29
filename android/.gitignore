@@ -1,2 +1,7 @@
 /build
 /.tauri
+.gradle/
+.kotlin/
+.idea/
+local.properties
+*.iml

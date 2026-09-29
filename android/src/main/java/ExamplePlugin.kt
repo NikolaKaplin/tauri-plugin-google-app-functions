@@ -10,11 +10,11 @@ import app.tauri.plugin.Invoke
 
 @InvokeArg
 class PingArgs {
-  var value: String? = null
+    var value: String? = null
 }
 
 @TauriPlugin
-class ExamplePlugin(private val activity: Activity): Plugin(activity) {
+class ExamplePlugin(private val activity: Activity) : Plugin(activity) {
     private val implementation = Example()
 
     @Command
