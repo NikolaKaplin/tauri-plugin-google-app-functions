@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Calls every test app function of the example on a connected device/emulator (Android 16+).
+# Calls every app function of the example on a connected device/emulator (Android 16+).
+# Build the app with the test functions first:
+#   npm run tauri android dev -- --features test-functions
 # Usage: ./test-app-functions.sh [path/to/app.apk]
 set -u
 
@@ -26,7 +28,7 @@ echo "=== Registered functions of $PKG"
 "$ADB" shell am force-stop "$PKG"
 echo
 echo "##### App closed: the service must start without the UI"
-call countWords '{"text": "hello app functions"}' '3'
+call testCountWords '{"text": "hello app functions"}' '3'
 call testEchoPrimitives '{"flag": true, "small": -7, "big": 9007199254740993, "ratio": 1.5, "precise": 3.141592653589793, "text": "Привет $ \"q\""}' 'same values'
 call testSum '{"values": [1, 2, 3, 2147483647]}' '2147483653'
 call testScale '{"values": [1.5, -2], "factor": 2}' '[3.0, -4.0]'
@@ -40,14 +42,18 @@ for kind in invalidArgument elementNotFound elementAlreadyExists permissionRequi
 done
 call testPanic '{}' 'AppUnknown error "test panic from Rust", app keeps running'
 call testAppName '{}' 'error: the app is not running'
-call createNote '{"title": "x"}' 'error: the app is not running'
+call createTask '{"title": "x"}' 'error: the app is not running'
 
 echo
 echo "##### Opening the app"
 "$ADB" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 > /dev/null
 sleep 5
-call testAppName '{}' '"tauri-app"'
-call createNote '{"title": "Groceries", "content": "milk"}' 'note id 1'
-call createNote '{"title": "Call mom"}' 'note id 2, content null'
-call createNote '{"title": "  "}' 'InvalidArgument: title must not be empty'
-call listNotes '{}' 'both notes'
+call testAppName '{}' '"Tauri Todo"'
+call createTask '{"title": "Buy milk", "notes": "2 liters"}' 'new task, fromAgent true; shows up in the app'
+call createTask '{"title": "  "}' 'InvalidArgument: title must not be empty'
+call listTasks '{}' 'all tasks'
+call listTasks '{"includeDone": false}' 'open tasks only'
+call getTask '{"id": 1}' 'task 1'
+call getTask '{"id": 999999}' 'ElementNotFound: no task with id 999999'
+call completeTask '{"id": 1}' 'task 1 with done true'
+call deleteTask '{"id": 999999}' 'ElementNotFound: no task with id 999999'

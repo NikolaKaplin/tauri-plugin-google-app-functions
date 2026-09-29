@@ -1,10 +1,8 @@
 [package]
 name = "tauri-app"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+description = "Todo list demo of tauri-plugin-google-app-functions"
+publish = false
 edition = "2024"
 rust-version = "1.90"
 
@@ -21,4 +19,9 @@ tauri-plugin-google-app-functions-build = { path = "../../../crates/build" }
 [dependencies]
 tauri = { version = "2.12.0", features = [] }
 tauri-plugin-google-app-functions = { path = "../../../" }
+serde_json = "1"
+
+[features]
+# App functions that test every type mapping and error path; used by test-app-functions.sh.
+test-functions = []
 

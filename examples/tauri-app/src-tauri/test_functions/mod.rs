@@ -1,5 +1,6 @@
 //! App functions that exercise every supported type mapping and error path of the plugin.
-//! Call them with `adb shell cmd app_function execute-app-function` (see the example README).
+//! Built only with `--features test-functions`, so agents don't see them in the demo; run them
+//! with `test-app-functions.sh` (see the example README).
 
 use tauri::AppHandle;
 use tauri_plugin_google_app_functions::{
@@ -166,4 +167,13 @@ fn test_panic() -> String {
 #[app_function]
 fn test_app_name(app: AppHandle) -> String {
     app.package_info().name.clone()
+}
+
+/// Counts the words in a text. Needs no running app, so it works while the app is closed.
+///
+/// # Arguments
+/// * `text` - The text to analyze.
+#[app_function]
+async fn test_count_words(text: String) -> i32 {
+    text.split_whitespace().count() as i32
 }
