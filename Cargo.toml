@@ -3,6 +3,7 @@ name = "tauri-plugin-google-app-functions"
 version = "0.1.0"
 authors = [ "Rizo" ]
 description = "Expose Rust functions of a Tauri app as Android AppFunctions"
+repository = "https://github.com/NikolaKaplin/tauri-plugin-google-app-functions"
 edition = "2024"
 rust-version = "1.90"
 exclude = ["/examples"]
