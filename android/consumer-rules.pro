@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Called from Rust over JNI by name.
+-keep class com.plugin.google_app_functions.AppFunctionsBridge {
+    native <methods>;
+}
+# Generated app function service and its serializable data classes.
+-keep class com.plugin.google_app_functions.generated.** { *; }

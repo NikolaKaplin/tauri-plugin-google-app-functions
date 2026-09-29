@@ -4,3 +4,4 @@
 /tauri.build.gradle.kts
 /proguard-tauri.pro
 /tauri.properties
+/src/main/res/xml/tauri_app_functions_metadata.xml

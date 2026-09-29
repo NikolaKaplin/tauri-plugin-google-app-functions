@@ -3,9 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    // Required for the ksp(...) appfunctions-compiler dependency below.
-    // KSP version must match the host app's Kotlin version: 2.2.10 in the Tauri CLI 2.12 Android template.
-    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
 }
 
 android {
@@ -13,7 +10,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        minSdk = 21
+        minSdk = 24 // androidx.appfunctions requires 24
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -32,10 +29,9 @@ kotlin {
 }
 
 dependencies {
-    implementation("androidx.appfunctions:appfunctions:1.0.0-alpha12")
-    // If this project uses any Kotlin source, use Kotlin Symbol Processing (KSP)
-    // See Add the KSP plugin to your project
-    ksp("androidx.appfunctions:appfunctions-compiler:1.0.0-alpha12")
+    // `api` so the app module compiles the generated @AppFunction service against it.
+    // The app module runs KSP with androidx.appfunctions:appfunctions-compiler of the same version.
+    api("androidx.appfunctions:appfunctions:1.0.0-alpha12")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.0")
     implementation("com.google.android.material:material:1.7.0")
