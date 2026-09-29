@@ -4,7 +4,7 @@
 set -u
 
 PKG=com.tauri.dev
-PREFIX=com.plugin.google_app_functions.generated.TauriAppFunctionServiceBase
+PREFIX=com.plugin.google_app_functions.TauriAppFunctionService
 ADB=${ADB:-adb}
 
 if [ $# -ge 1 ]; then

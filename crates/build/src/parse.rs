@@ -1,5 +1,5 @@
 //! Finds `#[app_function]` functions and `#[app_function_serializable]` structs in the app's
-//! Rust sources and converts them into a Kotlin-oriented model.
+//! Rust sources and converts them into the model the AppFunctions schema is rendered from.
 
 use std::{
   collections::{BTreeMap, BTreeSet},
@@ -32,7 +32,7 @@ pub enum KType {
 }
 
 pub struct Param {
-  /// JSON key and Kotlin parameter name.
+  /// camelCase name: the schema parameter name and JSON key.
   pub name: String,
   pub rust_name: String,
   pub ty: KType,
@@ -40,7 +40,8 @@ pub struct Param {
 
 pub struct Function {
   pub rust_name: String,
-  pub kotlin_name: String,
+  /// camelCase name; the part of the function ID after `#`.
+  pub name: String,
   pub docs: Docs,
   pub params: Vec<Param>,
   pub output: KType,
@@ -118,7 +119,7 @@ pub fn parse_dirs(dirs: &[PathBuf]) -> Result<Model, Vec<String>> {
   for (file, item) in raw.functions {
     match convert_function(&item, &known) {
       Ok(f) => {
-        if let Some(previous) = seen.insert(f.kotlin_name.clone(), file.clone()) {
+        if let Some(previous) = seen.insert(f.name.clone(), file.clone()) {
           errors.push(format!(
             "{}: app function `{}` is also defined in {}; app function names must be unique",
             file.display(),
@@ -248,7 +249,7 @@ fn convert_function(item: &syn::ItemFn, known: &BTreeSet<String>) -> Result<Func
 
   let rust_name = unraw(&item.sig.ident.to_string());
   Ok(Function {
-    kotlin_name: camel_case(&rust_name),
+    name: camel_case(&rust_name),
     rust_name,
     docs: Docs::parse(&doc_lines(&item.attrs)),
     params,

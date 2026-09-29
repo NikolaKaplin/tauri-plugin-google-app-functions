@@ -13,14 +13,21 @@
 //!
 //! It scans the crate's `src/` for `#[app_function]` functions and
 //! `#[app_function_serializable]` structs and, when building for Android through the Tauri CLI,
-//! writes the Kotlin `@AppFunctionServiceEntryPoint` service into the Android project. KSP then
-//! turns that service into the AppFunctions schema the system indexes.
+//! writes into the Android app module:
+//!
+//! - `assets/generated/tauri_app_functions.xml`: the AppFunctions schema the system indexes,
+//!   in the format the `androidx.appfunctions` KSP compiler produces;
+//! - `assets/generated/tauri_app_functions.json`: the parameter and result types the plugin's
+//!   `TauriAppFunctionService` converts calls with;
+//! - `res/xml/tauri_app_functions_metadata.xml`: the app description, when one is set.
+//!
+//! No Kotlin, KSP or Gradle changes are needed in the app.
 //!
 //! Signature errors (unsupported types, duplicate names) fail the build on every target, so
 //! they show up in desktop builds too.
 
+mod android;
 mod docs;
-mod kotlin;
 mod parse;
 
 use std::{
@@ -28,7 +35,7 @@ use std::{
   path::{Path, PathBuf},
 };
 
-/// Configures Kotlin generation. See the crate docs.
+/// Configures the generator. See the crate docs.
 #[derive(Debug, Default)]
 pub struct Builder {
   app_description: Option<String>,
@@ -74,9 +81,9 @@ impl Builder {
       println!("cargo:rerun-if-changed={}", dir.display());
     }
     for var in [
-      "WRY_ANDROID_KOTLIN_FILES_OUT_DIR",
-      "WRY_ANDROID_LIBRARY",
       "TAURI_ANDROID_PROJECT_PATH",
+      "WRY_ANDROID_LIBRARY",
+      "WRY_ANDROID_KOTLIN_FILES_OUT_DIR",
     ] {
       println!("cargo:rerun-if-env-changed={var}");
     }
@@ -88,24 +95,33 @@ impl Builder {
       return Ok(());
     }
     // Set by the Tauri CLI (`tauri android dev|build`); absent for a plain `cargo build`.
-    let Some(kotlin_dir) = env::var_os("WRY_ANDROID_KOTLIN_FILES_OUT_DIR") else {
+    let Some(project) = env::var_os("TAURI_ANDROID_PROJECT_PATH") else {
       println!(
-        "cargo:warning=WRY_ANDROID_KOTLIN_FILES_OUT_DIR is not set; skipping AppFunctions Kotlin generation (build through the Tauri CLI)"
+        "cargo:warning=TAURI_ANDROID_PROJECT_PATH is not set; skipping AppFunctions schema generation (build through the Tauri CLI)"
       );
       return Ok(());
     };
     let library =
       env::var("WRY_ANDROID_LIBRARY").map_err(|_| "WRY_ANDROID_LIBRARY is not set")?;
 
-    let kotlin_path = PathBuf::from(kotlin_dir).join("TauriAppFunctions.kt");
-    write_if_changed(&kotlin_path, &kotlin::render(&model, &library))?;
+    let main = PathBuf::from(project).join("app/src/main");
+    let assets = main.join("assets");
+    write_if_changed(&assets.join(android::SCHEMA_ASSET), &android::render_schema(&model))?;
+    write_if_changed(&assets.join(android::TYPES_ASSET), &android::render_types(&model, &library))?;
+    if let Some(description) = &self.app_description {
+      write_if_changed(
+        &main.join("res/xml/tauri_app_functions_metadata.xml"),
+        &android::render_app_metadata(description),
+      )?;
+    }
 
-    if let (Some(description), Some(project)) =
-      (&self.app_description, env::var_os("TAURI_ANDROID_PROJECT_PATH"))
-    {
-      let xml_path = PathBuf::from(project)
-        .join("app/src/main/res/xml/tauri_app_functions_metadata.xml");
-      write_if_changed(&xml_path, &kotlin::render_app_metadata(description))?;
+    // Written by versions that generated Kotlin for KSP; it no longer compiles.
+    if let Some(kotlin_dir) = env::var_os("WRY_ANDROID_KOTLIN_FILES_OUT_DIR") {
+      let stale = PathBuf::from(kotlin_dir).join("TauriAppFunctions.kt");
+      if stale.exists() {
+        fs::remove_file(&stale)
+          .map_err(|e| format!("failed to remove {}: {e}", stale.display()))?;
+      }
     }
     Ok(())
   }
