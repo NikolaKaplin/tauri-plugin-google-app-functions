@@ -5,8 +5,8 @@ use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use syn::{
-  parse_macro_input, spanned::Spanned, Error, Fields, FnArg, ItemFn, ItemStruct, Pat, ReturnType,
-  Type,
+  Error, Fields, FnArg, ItemFn, ItemStruct, Pat, ReturnType, Type, parse_macro_input,
+  spanned::Spanned,
 };
 
 /// Registers a free function as an Android app function.
@@ -77,7 +77,10 @@ fn expand_app_function(function: ItemFn) -> syn::Result<TokenStream2> {
     ));
   }
   if let Some(variadic) = &sig.variadic {
-    return Err(Error::new(variadic.span(), "app functions cannot be variadic"));
+    return Err(Error::new(
+      variadic.span(),
+      "app functions cannot be variadic",
+    ));
   }
 
   let mut fields = Vec::new();

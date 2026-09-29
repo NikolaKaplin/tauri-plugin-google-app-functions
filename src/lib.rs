@@ -28,11 +28,11 @@
 //! `tauri-plugin-google-app-functions-build` from the app's `build.rs`.
 
 use tauri::{
-  plugin::{Builder, TauriPlugin},
   Runtime,
+  plugin::{Builder, TauriPlugin},
 };
 
-pub use registry::{app_handle, invoke, registered_functions, AppFunctionError};
+pub use registry::{AppFunctionError, app_handle, invoke, registered_functions};
 pub use tauri_plugin_google_app_functions_macros::{app_function, app_function_serializable};
 
 #[cfg(target_os = "android")]
@@ -50,7 +50,7 @@ pub mod __private {
   pub use serde_json;
 
   pub use crate::registry::{
-    invalid_arguments, serialize_output, serialize_result, AppFunctionEntry, BoxFuture,
+    AppFunctionEntry, BoxFuture, invalid_arguments, serialize_output, serialize_result,
   };
 }
 

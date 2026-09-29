@@ -2,7 +2,9 @@
 const COMMANDS: &[&str] = &[];
 
 fn main() {
-  tauri_plugin::Builder::new(COMMANDS).android_path("android").build();
+  tauri_plugin::Builder::new(COMMANDS)
+    .android_path("android")
+    .build();
 
   // Test binaries link tauri, which needs Common Controls v6 on Windows; without this manifest
   // they exit with STATUS_ENTRYPOINT_NOT_FOUND.

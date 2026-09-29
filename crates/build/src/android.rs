@@ -38,16 +38,22 @@ fn object_name(name: &str) -> String {
 }
 
 fn description(lines: &[String]) -> String {
-  lines.iter().map(|line| line.trim_end()).collect::<Vec<_>>().join("\n")
+  lines
+    .iter()
+    .map(|line| line.trim_end())
+    .collect::<Vec<_>>()
+    .join("\n")
 }
 
 /// Structs reachable from the functions, keyed by qualified name (KSP writes them sorted).
-fn referenced_objects<'a>(model: &'a Model) -> BTreeMap<String, &'a Serializable> {
+fn referenced_objects(model: &Model) -> BTreeMap<String, &Serializable> {
   fn visit<'a>(ty: &KType, model: &'a Model, out: &mut BTreeMap<String, &'a Serializable>) {
     match ty {
       KType::Nullable(inner) | KType::List(inner) => visit(inner, model, out),
       KType::Custom(name) => {
-        let Some(s) = model.serializables.iter().find(|s| &s.name == name) else { return };
+        let Some(s) = model.serializables.iter().find(|s| &s.name == name) else {
+          return;
+        };
         if out.insert(object_name(name), s).is_none() {
           for field in &s.fields {
             visit(&field.ty, model, out);
@@ -183,7 +189,10 @@ pub fn render_schema(model: &Model) -> String {
       let required = !matches!(p.ty, KType::Nullable(_));
       xml.text("isRequired", &required.to_string());
       xml.text("name", &p.name);
-      xml.text_if_any("description", f.docs.param(&p.rust_name).unwrap_or_default());
+      xml.text_if_any(
+        "description",
+        f.docs.param(&p.rust_name).unwrap_or_default(),
+      );
       xml.close("parameters");
     }
     xml.open("response");
@@ -206,7 +215,12 @@ pub fn render_schema(model: &Model) -> String {
       xml.text_if_any("description", &description(&s.docs.description));
       for field in &s.fields {
         xml.open("properties");
-        data_type(&mut xml, "dataTypeMetadata", &field.ty, &description(&field.docs.description));
+        data_type(
+          &mut xml,
+          "dataTypeMetadata",
+          &field.ty,
+          &description(&field.docs.description),
+        );
         xml.text("id", "unused");
         xml.text("name", &field.name);
         xml.close("properties");
@@ -301,7 +315,11 @@ pub fn render_types(model: &Model, library: &str) -> String {
     })
     .collect();
   out.push_str(&functions.join(","));
-  out.push_str(if functions.is_empty() { "},\n" } else { "\n  },\n" });
+  out.push_str(if functions.is_empty() {
+    "},\n"
+  } else {
+    "\n  },\n"
+  });
 
   out.push_str("  \"objects\": {");
   let objects = referenced_objects(model);
@@ -316,7 +334,11 @@ pub fn render_types(model: &Model, library: &str) -> String {
     })
     .collect();
   out.push_str(&rendered.join(","));
-  out.push_str(if rendered.is_empty() { "}\n" } else { "\n  }\n" });
+  out.push_str(if rendered.is_empty() {
+    "}\n"
+  } else {
+    "\n  }\n"
+  });
   out.push_str("}\n");
   out
 }

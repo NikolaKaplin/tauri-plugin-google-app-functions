@@ -69,13 +69,16 @@ impl Builder {
   }
 
   pub fn try_build(self) -> Result<(), String> {
-    let manifest_dir = PathBuf::from(
-      env::var_os("CARGO_MANIFEST_DIR").ok_or("CARGO_MANIFEST_DIR is not set")?,
-    );
+    let manifest_dir =
+      PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").ok_or("CARGO_MANIFEST_DIR is not set")?);
     let dirs: Vec<PathBuf> = if self.source_dirs.is_empty() {
       vec![manifest_dir.join("src")]
     } else {
-      self.source_dirs.iter().map(|dir| manifest_dir.join(dir)).collect()
+      self
+        .source_dirs
+        .iter()
+        .map(|dir| manifest_dir.join(dir))
+        .collect()
     };
     for dir in &dirs {
       println!("cargo:rerun-if-changed={}", dir.display());
@@ -101,13 +104,18 @@ impl Builder {
       );
       return Ok(());
     };
-    let library =
-      env::var("WRY_ANDROID_LIBRARY").map_err(|_| "WRY_ANDROID_LIBRARY is not set")?;
+    let library = env::var("WRY_ANDROID_LIBRARY").map_err(|_| "WRY_ANDROID_LIBRARY is not set")?;
 
     let main = PathBuf::from(project).join("app/src/main");
     let assets = main.join("assets");
-    write_if_changed(&assets.join(android::SCHEMA_ASSET), &android::render_schema(&model))?;
-    write_if_changed(&assets.join(android::TYPES_ASSET), &android::render_types(&model, &library))?;
+    write_if_changed(
+      &assets.join(android::SCHEMA_ASSET),
+      &android::render_schema(&model),
+    )?;
+    write_if_changed(
+      &assets.join(android::TYPES_ASSET),
+      &android::render_types(&model, &library),
+    )?;
     if let Some(description) = &self.app_description {
       write_if_changed(
         &main.join("res/xml/tauri_app_functions_metadata.xml"),
@@ -138,7 +146,8 @@ fn write_if_changed(path: &Path, content: &str) -> Result<(), String> {
     return Ok(());
   }
   if let Some(parent) = path.parent() {
-    fs::create_dir_all(parent).map_err(|e| format!("failed to create {}: {e}", parent.display()))?;
+    fs::create_dir_all(parent)
+      .map_err(|e| format!("failed to create {}: {e}", parent.display()))?;
   }
   fs::write(path, content).map_err(|e| format!("failed to write {}: {e}", path.display()))
 }

@@ -1,6 +1,6 @@
 use serde_json::json;
 use tauri_plugin_google_app_functions::{
-  app_function, app_function_serializable, invoke, registered_functions, AppFunctionError,
+  AppFunctionError, app_function, app_function_serializable, invoke, registered_functions,
 };
 
 /// A task.
@@ -23,7 +23,11 @@ async fn create_task(title: String, due_at: Option<i64>) -> Result<Task, AppFunc
   if title.is_empty() {
     return Err(AppFunctionError::InvalidArgument("title is empty".into()));
   }
-  Ok(Task { task_id: title, tags: vec!["new".into()], due: due_at })
+  Ok(Task {
+    task_id: title,
+    tags: vec!["new".into()],
+    due: due_at,
+  })
 }
 
 #[app_function]
@@ -49,13 +53,20 @@ fn registers_all_functions() {
 #[test]
 fn invokes_with_camel_case_json() {
   tauri::async_runtime::block_on(async {
-    let task = invoke("create_task", json!({ "title": "t", "dueAt": 5 })).await.unwrap();
+    let task = invoke("create_task", json!({ "title": "t", "dueAt": 5 }))
+      .await
+      .unwrap();
     assert_eq!(task, json!({ "taskId": "t", "tags": ["new"], "due": 5 }));
 
-    let task = invoke("create_task", json!({ "title": "t", "dueAt": null })).await.unwrap();
+    let task = invoke("create_task", json!({ "title": "t", "dueAt": null }))
+      .await
+      .unwrap();
     assert_eq!(task["due"], json!(null));
 
-    assert_eq!(invoke("add", json!({ "a": 2, "b": 3 })).await.unwrap(), json!(5));
+    assert_eq!(
+      invoke("add", json!({ "a": 2, "b": 3 })).await.unwrap(),
+      json!(5)
+    );
     assert_eq!(invoke("nothing", json!({})).await.unwrap(), json!(null));
   });
 }
@@ -63,7 +74,9 @@ fn invokes_with_camel_case_json() {
 #[test]
 fn maps_errors() {
   tauri::async_runtime::block_on(async {
-    let err = invoke("create_task", json!({ "title": "" })).await.unwrap_err();
+    let err = invoke("create_task", json!({ "title": "" }))
+      .await
+      .unwrap_err();
     assert!(matches!(err, AppFunctionError::InvalidArgument(_)));
 
     let err = invoke("add", json!({ "a": "x" })).await.unwrap_err();

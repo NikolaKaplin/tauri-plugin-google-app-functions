@@ -64,7 +64,11 @@ impl Docs {
     while docs.description.last().is_some_and(|l| l.trim().is_empty()) {
       docs.description.pop();
     }
-    while docs.description.first().is_some_and(|l| l.trim().is_empty()) {
+    while docs
+      .description
+      .first()
+      .is_some_and(|l| l.trim().is_empty())
+    {
       docs.description.remove(0);
     }
     if !returns.is_empty() {
@@ -104,7 +108,10 @@ fn parse_param_bullet(line: &str) -> Option<(String, String)> {
     .trim_start()
     .trim_start_matches(['-', ':', '–', '—'])
     .trim();
-  Some((name.trim_start_matches("r#").to_owned(), description.to_owned()))
+  Some((
+    name.trim_start_matches("r#").to_owned(),
+    description.to_owned(),
+  ))
 }
 
 #[cfg(test)]
@@ -129,6 +136,9 @@ mod tests {
   #[test]
   fn keeps_other_headings_in_description() {
     let docs = Docs::parse(&lines("Does things.\n\n# Errors\nFails sometimes."));
-    assert_eq!(docs.description, vec!["Does things.", "", "# Errors", "Fails sometimes."]);
+    assert_eq!(
+      docs.description,
+      vec!["Does things.", "", "# Errors", "Fails sometimes."]
+    );
   }
 }

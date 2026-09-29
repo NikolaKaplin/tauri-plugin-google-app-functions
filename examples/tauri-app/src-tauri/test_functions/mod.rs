@@ -4,49 +4,49 @@
 
 use tauri::AppHandle;
 use tauri_plugin_google_app_functions::{
-    AppFunctionError, app_function, app_function_serializable,
+  AppFunctionError, app_function, app_function_serializable,
 };
 
 /// Every primitive parameter echoed back.
 #[app_function_serializable]
 pub struct PrimitivesEcho {
-    /// Echo of `flag`.
-    pub flag: bool,
-    /// Echo of `small`.
-    pub small: i32,
-    /// Echo of `big`.
-    pub big: i64,
-    /// Echo of `ratio`.
-    pub ratio: f32,
-    /// Echo of `precise`.
-    pub precise: f64,
-    /// Echo of `text`.
-    pub text: String,
+  /// Echo of `flag`.
+  pub flag: bool,
+  /// Echo of `small`.
+  pub small: i32,
+  /// Echo of `big`.
+  pub big: i64,
+  /// Echo of `ratio`.
+  pub ratio: f32,
+  /// Echo of `precise`.
+  pub precise: f64,
+  /// Echo of `text`.
+  pub text: String,
 }
 
 /// A postal address.
 #[app_function_serializable]
 #[derive(Clone)]
 pub struct Address {
-    /// City name.
-    pub city: String,
-    /// Street and house number, if known.
-    pub street: Option<String>,
+  /// City name.
+  pub city: String,
+  /// Street and house number, if known.
+  pub street: Option<String>,
 }
 
 /// A contact with nested objects and lists.
 #[app_function_serializable]
 pub struct Contact {
-    /// Full name.
-    pub name: String,
-    /// Free-form labels.
-    pub tags: Vec<String>,
-    /// Main address, if any.
-    pub home: Option<Address>,
-    /// All known addresses.
-    pub addresses: Vec<Address>,
-    /// Lucky numbers.
-    pub lucky_numbers: Vec<i64>,
+  /// Full name.
+  pub name: String,
+  /// Free-form labels.
+  pub tags: Vec<String>,
+  /// Main address, if any.
+  pub home: Option<Address>,
+  /// All known addresses.
+  pub addresses: Vec<Address>,
+  /// Lucky numbers.
+  pub lucky_numbers: Vec<i64>,
 }
 
 /// Returns all primitive arguments unchanged.
@@ -60,21 +60,21 @@ pub struct Contact {
 /// * `text` - Any text.
 #[app_function]
 fn test_echo_primitives(
-    flag: bool,
-    small: i32,
-    big: i64,
-    ratio: f32,
-    precise: f64,
-    text: String,
+  flag: bool,
+  small: i32,
+  big: i64,
+  ratio: f32,
+  precise: f64,
+  text: String,
 ) -> PrimitivesEcho {
-    PrimitivesEcho {
-        flag,
-        small,
-        big,
-        ratio,
-        precise,
-        text,
-    }
+  PrimitivesEcho {
+    flag,
+    small,
+    big,
+    ratio,
+    precise,
+    text,
+  }
 }
 
 /// Sums a list of integers.
@@ -83,7 +83,7 @@ fn test_echo_primitives(
 /// * `values` - Integers to add up.
 #[app_function]
 fn test_sum(values: Vec<i32>) -> i64 {
-    values.iter().map(|&v| v as i64).sum()
+  values.iter().map(|&v| v as i64).sum()
 }
 
 /// Multiplies each number by a factor.
@@ -93,7 +93,7 @@ fn test_sum(values: Vec<i32>) -> i64 {
 /// * `factor` - Multiplier.
 #[app_function]
 fn test_scale(values: Vec<f64>, factor: f64) -> Vec<f64> {
-    values.into_iter().map(|v| v * factor).collect()
+  values.into_iter().map(|v| v * factor).collect()
 }
 
 /// Joins words with a separator.
@@ -103,7 +103,7 @@ fn test_scale(values: Vec<f64>, factor: f64) -> Vec<f64> {
 /// * `separator` - Separator between words; a single space when omitted.
 #[app_function]
 async fn test_join(words: Vec<String>, separator: Option<String>) -> String {
-    words.join(separator.as_deref().unwrap_or(" "))
+  words.join(separator.as_deref().unwrap_or(" "))
 }
 
 /// Builds a contact from nested input and echoes it back with derived fields.
@@ -115,20 +115,20 @@ async fn test_join(words: Vec<String>, separator: Option<String>) -> String {
 /// * `other_addresses` - Additional addresses.
 #[app_function]
 fn test_contact(
-    name: String,
-    tags: Vec<String>,
-    home: Option<Address>,
-    other_addresses: Vec<Address>,
+  name: String,
+  tags: Vec<String>,
+  home: Option<Address>,
+  other_addresses: Vec<Address>,
 ) -> Contact {
-    let mut addresses: Vec<Address> = home.iter().cloned().collect();
-    addresses.extend(other_addresses);
-    Contact {
-        lucky_numbers: vec![name.len() as i64, tags.len() as i64, addresses.len() as i64],
-        name,
-        tags,
-        home,
-        addresses,
-    }
+  let mut addresses: Vec<Address> = home.iter().cloned().collect();
+  addresses.extend(other_addresses);
+  Contact {
+    lucky_numbers: vec![name.len() as i64, tags.len() as i64, addresses.len() as i64],
+    name,
+    tags,
+    home,
+    addresses,
+  }
 }
 
 /// Always fails with the requested error kind.
@@ -138,18 +138,18 @@ fn test_contact(
 ///   permissionRequired, notSupported, disabled, limitExceeded, cancelled, unknown.
 #[app_function]
 fn test_fail(kind: String) -> Result<(), AppFunctionError> {
-    let message = format!("requested failure: {kind}");
-    Err(match kind.as_str() {
-        "invalidArgument" => AppFunctionError::InvalidArgument(message),
-        "elementNotFound" => AppFunctionError::ElementNotFound(message),
-        "elementAlreadyExists" => AppFunctionError::ElementAlreadyExists(message),
-        "permissionRequired" => AppFunctionError::PermissionRequired(message),
-        "notSupported" => AppFunctionError::NotSupported(message),
-        "disabled" => AppFunctionError::Disabled(message),
-        "limitExceeded" => AppFunctionError::LimitExceeded(message),
-        "cancelled" => AppFunctionError::Cancelled(message),
-        _ => AppFunctionError::Unknown(message),
-    })
+  let message = format!("requested failure: {kind}");
+  Err(match kind.as_str() {
+    "invalidArgument" => AppFunctionError::InvalidArgument(message),
+    "elementNotFound" => AppFunctionError::ElementNotFound(message),
+    "elementAlreadyExists" => AppFunctionError::ElementAlreadyExists(message),
+    "permissionRequired" => AppFunctionError::PermissionRequired(message),
+    "notSupported" => AppFunctionError::NotSupported(message),
+    "disabled" => AppFunctionError::Disabled(message),
+    "limitExceeded" => AppFunctionError::LimitExceeded(message),
+    "cancelled" => AppFunctionError::Cancelled(message),
+    _ => AppFunctionError::Unknown(message),
+  })
 }
 
 /// Does nothing and returns no value.
@@ -159,14 +159,14 @@ fn test_noop() {}
 /// Panics inside Rust; the call must fail with an error instead of crashing the app.
 #[app_function]
 fn test_panic() -> String {
-    panic!("test panic from Rust")
+  panic!("test panic from Rust")
 }
 
 /// Returns the app name. Fails while the app has not been opened, because it needs the
 /// running Tauri app.
 #[app_function]
 fn test_app_name(app: AppHandle) -> String {
-    app.package_info().name.clone()
+  app.package_info().name.clone()
 }
 
 /// Counts the words in a text. Needs no running app, so it works while the app is closed.
@@ -175,5 +175,5 @@ fn test_app_name(app: AppHandle) -> String {
 /// * `text` - The text to analyze.
 #[app_function]
 async fn test_count_words(text: String) -> i32 {
-    text.split_whitespace().count() as i32
+  text.split_whitespace().count() as i32
 }

@@ -7,7 +7,9 @@ use std::{
   path::{Path, PathBuf},
 };
 
-use syn::{Attribute, Expr, FnArg, GenericArgument, Item, Lit, Pat, PathArguments, ReturnType, Type};
+use syn::{
+  Attribute, Expr, FnArg, GenericArgument, Item, Lit, Pat, PathArguments, ReturnType, Type,
+};
 
 use crate::docs::Docs;
 
@@ -95,7 +97,11 @@ pub fn parse_dirs(dirs: &[PathBuf]) -> Result<Model, Vec<String>> {
     }
   }
 
-  let known: BTreeSet<String> = raw.structs.iter().map(|(_, s)| s.ident.to_string()).collect();
+  let known: BTreeSet<String> = raw
+    .structs
+    .iter()
+    .map(|(_, s)| s.ident.to_string())
+    .collect();
   let mut model = Model::default();
 
   let mut seen_structs: BTreeMap<String, PathBuf> = BTreeMap::new();
@@ -133,11 +139,17 @@ pub fn parse_dirs(dirs: &[PathBuf]) -> Result<Model, Vec<String>> {
     }
   }
 
-  if errors.is_empty() { Ok(model) } else { Err(errors) }
+  if errors.is_empty() {
+    Ok(model)
+  } else {
+    Err(errors)
+  }
 }
 
 fn collect_rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
-  let Ok(entries) = fs::read_dir(dir) else { return };
+  let Ok(entries) = fs::read_dir(dir) else {
+    return;
+  };
   for entry in entries.flatten() {
     let path = entry.path();
     if path.is_dir() {
@@ -190,7 +202,10 @@ pub fn doc_lines(attrs: &[Attribute]) -> Vec<String> {
     .collect()
 }
 
-fn convert_struct(item: &syn::ItemStruct, known: &BTreeSet<String>) -> Result<Serializable, String> {
+fn convert_struct(
+  item: &syn::ItemStruct,
+  known: &BTreeSet<String>,
+) -> Result<Serializable, String> {
   if !item.generics.params.is_empty() {
     return Err("serializable structs cannot be generic".into());
   }
@@ -204,9 +219,15 @@ fn convert_struct(item: &syn::ItemStruct, known: &BTreeSet<String>) -> Result<Se
       let rust_name = unraw(&field.ident.as_ref().expect("named field").to_string());
       let ty = convert_type(&field.ty, known).map_err(|e| format!("field `{rust_name}`: {e}"))?;
       if ty == KType::Unit {
-        return Err(format!("field `{rust_name}`: `()` is not a valid field type"));
+        return Err(format!(
+          "field `{rust_name}`: `()` is not a valid field type"
+        ));
       }
-      Ok(Field { name: camel_case(&rust_name), docs: Docs::parse(&doc_lines(&field.attrs)), ty })
+      Ok(Field {
+        name: camel_case(&rust_name),
+        docs: Docs::parse(&doc_lines(&field.attrs)),
+        ty,
+      })
     })
     .collect::<Result<Vec<_>, String>>()?;
   Ok(Serializable {
@@ -231,9 +252,15 @@ fn convert_function(item: &syn::ItemFn, known: &BTreeSet<String>) -> Result<Func
     let rust_name = unraw(&pat.ident.to_string());
     let ty = convert_type(&input.ty, known).map_err(|e| format!("parameter `{rust_name}`: {e}"))?;
     if ty == KType::Unit {
-      return Err(format!("parameter `{rust_name}`: `()` is not a valid parameter type"));
+      return Err(format!(
+        "parameter `{rust_name}`: `()` is not a valid parameter type"
+      ));
     }
-    params.push(Param { name: camel_case(&rust_name), rust_name, ty });
+    params.push(Param {
+      name: camel_case(&rust_name),
+      rust_name,
+      ty,
+    });
   }
 
   let output = match &item.sig.output {
@@ -289,9 +316,15 @@ fn last_ident(ty: &Type) -> Option<&syn::Ident> {
 }
 
 fn generic_args(ty: &Type) -> Vec<&Type> {
-  let Type::Path(path) = ty else { return Vec::new() };
-  let Some(segment) = path.path.segments.last() else { return Vec::new() };
-  let PathArguments::AngleBracketed(args) = &segment.arguments else { return Vec::new() };
+  let Type::Path(path) = ty else {
+    return Vec::new();
+  };
+  let Some(segment) = path.path.segments.last() else {
+    return Vec::new();
+  };
+  let PathArguments::AngleBracketed(args) = &segment.arguments else {
+    return Vec::new();
+  };
   args
     .args
     .iter()
@@ -303,7 +336,11 @@ fn generic_args(ty: &Type) -> Vec<&Type> {
 }
 
 fn result_ok_type(ty: &Type) -> Option<&Type> {
-  if last_ident(ty)? == "Result" { generic_args(ty).into_iter().next() } else { None }
+  if last_ident(ty)? == "Result" {
+    generic_args(ty).into_iter().next()
+  } else {
+    None
+  }
 }
 
 fn single_arg<'a>(ty: &'a Type, name: &str) -> Result<&'a Type, String> {

@@ -19,7 +19,11 @@ use tasks::{Task, TaskStore};
 /// # Returns
 /// The new task with its ID.
 #[app_function]
-fn create_task(app: AppHandle, title: String, notes: Option<String>) -> Result<Task, AppFunctionError> {
+fn create_task(
+  app: AppHandle,
+  title: String,
+  notes: Option<String>,
+) -> Result<Task, AppFunctionError> {
   app.state::<TaskStore>().add(&app, title, notes, true)
 }
 
@@ -74,12 +78,21 @@ fn tasks(store: State<TaskStore>) -> Vec<Task> {
 }
 
 #[tauri::command]
-fn add_task(app: AppHandle, store: State<TaskStore>, title: String) -> Result<Task, AppFunctionError> {
+fn add_task(
+  app: AppHandle,
+  store: State<TaskStore>,
+  title: String,
+) -> Result<Task, AppFunctionError> {
   store.add(&app, title, None, false)
 }
 
 #[tauri::command]
-fn set_task_done(app: AppHandle, store: State<TaskStore>, id: i64, done: bool) -> Result<Task, AppFunctionError> {
+fn set_task_done(
+  app: AppHandle,
+  store: State<TaskStore>,
+  id: i64,
+  done: bool,
+) -> Result<Task, AppFunctionError> {
   store.set_done(&app, id, done)
 }
 
@@ -97,7 +110,12 @@ pub fn run() {
       app.state::<TaskStore>().load(app.handle())?;
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![tasks, add_task, set_task_done, remove_task])
+    .invoke_handler(tauri::generate_handler![
+      tasks,
+      add_task,
+      set_task_done,
+      remove_task
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

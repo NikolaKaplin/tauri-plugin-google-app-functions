@@ -88,10 +88,19 @@ fn generates_android_files() {
     "            <description>The created task.</description>",
     "            <name>com.plugin.google_app_functions.Task</name>",
   ] {
-    assert!(schema.contains(expected), "missing:\n{expected}\n\nin:\n{schema}");
+    assert!(
+      schema.contains(expected),
+      "missing:\n{expected}\n\nin:\n{schema}"
+    );
   }
-  assert!(!schema.contains("Unused"), "unused structs stay out of the schema:\n{schema}");
-  assert!(!schema.contains("<name>app</name>"), "AppHandle must not be exposed:\n{schema}");
+  assert!(
+    !schema.contains("Unused"),
+    "unused structs stay out of the schema:\n{schema}"
+  );
+  assert!(
+    !schema.contains("<name>app</name>"),
+    "AppHandle must not be exposed:\n{schema}"
+  );
 
   let types = read(&assets.join("tauri_app_functions.json"));
   for expected in [
@@ -100,12 +109,18 @@ fn generates_android_files() {
     "\"com.plugin.google_app_functions.TauriAppFunctionService#nothing\": {\"name\": \"nothing\", \"params\": [], \"returns\": \"unit\"}",
     "\"com.plugin.google_app_functions.Task\": [[\"taskId\", \"string\"], [\"tags\", \"string[]\"], [\"scores\", \"double[]\"], [\"due\", \"long?\"]]",
   ] {
-    assert!(types.contains(expected), "missing:\n{expected}\n\nin:\n{types}");
+    assert!(
+      types.contains(expected),
+      "missing:\n{expected}\n\nin:\n{types}"
+    );
   }
 
   let metadata = read(&project.join("app/src/main/res/xml/tauri_app_functions_metadata.xml"));
   assert!(metadata.contains("appfn:description=\"Manages &quot;tasks&quot; &amp; more\""));
-  assert!(!kotlin.join("TauriAppFunctions.kt").exists(), "stale KSP input must be removed");
+  assert!(
+    !kotlin.join("TauriAppFunctions.kt").exists(),
+    "stale KSP input must be removed"
+  );
 
   // For the sources in fixtures/ksp_src, the schema matches, byte for byte, what the
   // androidx.appfunctions KSP compiler produced for the equivalent Kotlin.
@@ -114,17 +129,36 @@ fn generates_android_files() {
     .source_dir(&ksp_src)
     .try_build()
     .unwrap();
-  let expected = read(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/ksp_tauri_app_functions.xml").as_path())
-    .replace("\r\n", "\n")
-    .replace(KSP_SERVICE, "com.plugin.google_app_functions.TauriAppFunctionService")
-    .replace(KSP_PREFIX, "com.plugin.google_app_functions.");
+  let expected = read(
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("tests/fixtures/ksp_tauri_app_functions.xml")
+      .as_path(),
+  )
+  .replace("\r\n", "\n")
+  .replace(
+    KSP_SERVICE,
+    "com.plugin.google_app_functions.TauriAppFunctionService",
+  )
+  .replace(KSP_PREFIX, "com.plugin.google_app_functions.");
   let actual = read(&assets.join("tauri_app_functions.xml"));
-  assert!(actual == expected, "schema differs from KSP output:\n{}", first_difference(&expected, &actual));
+  assert!(
+    actual == expected,
+    "schema differs from KSP output:\n{}",
+    first_difference(&expected, &actual)
+  );
 
-  let root = setup("err", "#[app_function] fn bad(x: std::collections::HashMap<String, String>) {}");
+  let root = setup(
+    "err",
+    "#[app_function] fn bad(x: std::collections::HashMap<String, String>) {}",
+  );
   unsafe { env::set_var("CARGO_MANIFEST_DIR", &root) };
-  let error = tauri_plugin_google_app_functions_build::Builder::new().try_build().unwrap_err();
-  assert!(error.contains("parameter `x`: unsupported type `HashMap`"), "{error}");
+  let error = tauri_plugin_google_app_functions_build::Builder::new()
+    .try_build()
+    .unwrap_err();
+  assert!(
+    error.contains("parameter `x`: unsupported type `HashMap`"),
+    "{error}"
+  );
 }
 
 fn first_difference(expected: &str, actual: &str) -> String {

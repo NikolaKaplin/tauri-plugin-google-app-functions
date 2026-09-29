@@ -32,7 +32,10 @@ pub struct TaskStore {
 /// Seed shown on the first launch, so the list is not empty in screenshots.
 fn sample_tasks() -> Vec<Task> {
   [
-    ("Try the demo with adb", Some("See the README of the example")),
+    (
+      "Try the demo with adb",
+      Some("See the README of the example"),
+    ),
     ("Ask Gemini to add a task", None),
     ("Star tauri-plugin-google-app-functions", None),
   ]
@@ -66,7 +69,11 @@ impl TaskStore {
   }
 
   pub fn get(&self, id: i64) -> Result<Task, AppFunctionError> {
-    self.all().into_iter().find(|t| t.id == id).ok_or_else(|| not_found(id))
+    self
+      .all()
+      .into_iter()
+      .find(|t| t.id == id)
+      .ok_or_else(|| not_found(id))
   }
 
   pub fn add<R: Runtime>(
@@ -78,12 +85,20 @@ impl TaskStore {
   ) -> Result<Task, AppFunctionError> {
     let title = title.trim().to_owned();
     if title.is_empty() {
-      return Err(AppFunctionError::InvalidArgument("title must not be empty".into()));
+      return Err(AppFunctionError::InvalidArgument(
+        "title must not be empty".into(),
+      ));
     }
     let notes = notes.map(|n| n.trim().to_owned()).filter(|n| !n.is_empty());
     self.change(app, |tasks| {
       let id = tasks.iter().map(|t| t.id).max().unwrap_or(0) + 1;
-      let task = Task { id, title, notes, done: false, from_agent };
+      let task = Task {
+        id,
+        title,
+        notes,
+        done: false,
+        from_agent,
+      };
       tasks.push(task.clone());
       Ok(task)
     })
@@ -96,7 +111,10 @@ impl TaskStore {
     done: bool,
   ) -> Result<Task, AppFunctionError> {
     self.change(app, |tasks| {
-      let task = tasks.iter_mut().find(|t| t.id == id).ok_or_else(|| not_found(id))?;
+      let task = tasks
+        .iter_mut()
+        .find(|t| t.id == id)
+        .ok_or_else(|| not_found(id))?;
       task.done = done;
       Ok(task.clone())
     })
@@ -104,7 +122,10 @@ impl TaskStore {
 
   pub fn remove<R: Runtime>(&self, app: &AppHandle<R>, id: i64) -> Result<(), AppFunctionError> {
     self.change(app, |tasks| {
-      let index = tasks.iter().position(|t| t.id == id).ok_or_else(|| not_found(id))?;
+      let index = tasks
+        .iter()
+        .position(|t| t.id == id)
+        .ok_or_else(|| not_found(id))?;
       tasks.remove(index);
       Ok(())
     })
@@ -127,7 +148,9 @@ impl TaskStore {
         .map_or(Ok(()), fs::create_dir_all)
         .and_then(|()| fs::write(file, serde_json::to_string_pretty(&snapshot).unwrap()));
       if let Err(e) = saved {
-        return Err(AppFunctionError::Unknown(format!("failed to save tasks: {e}")));
+        return Err(AppFunctionError::Unknown(format!(
+          "failed to save tasks: {e}"
+        )));
       }
     }
     let _ = app.emit("tasks-changed", &snapshot);

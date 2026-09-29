@@ -80,7 +80,9 @@ inventory::collect!(AppFunctionEntry);
 
 /// Names of all functions registered with `#[app_function]`.
 pub fn registered_functions() -> impl Iterator<Item = &'static str> {
-  inventory::iter::<AppFunctionEntry>.into_iter().map(|entry| entry.name)
+  inventory::iter::<AppFunctionEntry>
+    .into_iter()
+    .map(|entry| entry.name)
 }
 
 /// Calls a registered app function by its Rust name with JSON arguments keyed by the
@@ -109,9 +111,7 @@ pub fn app_handle<R: Runtime>() -> Result<AppHandle<R>, AppFunctionError> {
     .and_then(|handle| handle.downcast_ref::<AppHandle<R>>())
     .cloned()
     .ok_or_else(|| {
-      AppFunctionError::Unknown(
-        "the app is not running; open it and retry".to_owned(),
-      )
+      AppFunctionError::Unknown("the app is not running; open it and retry".to_owned())
     })
 }
 
