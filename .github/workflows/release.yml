@@ -51,6 +51,9 @@ jobs:
       - run: cargo publish --workspace
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      # Unpacked packages confuse rust-cache's cleanup; they are not worth caching anyway.
+      - if: always()
+        run: rm -rf target/package
 
       - name: Create the GitHub release
         run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "$GITHUB_REF_NAME"

@@ -44,6 +44,9 @@ jobs:
       - run: cargo test --workspace
       # Packages and builds the three crates in publish order, the way crates.io will see them.
       - run: cargo publish --workspace --dry-run
+      # Unpacked packages confuse rust-cache's cleanup; they are not worth caching anyway.
+      - if: always()
+        run: rm -rf target/package
 
   android:
     name: Android build
