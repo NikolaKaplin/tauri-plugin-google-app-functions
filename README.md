@@ -16,6 +16,13 @@
   <img src="https://img.shields.io/badge/Rust-1.90%2B-CE422B?logo=rust&logoColor=white" alt="Rust 1.90+">
 </p>
 
+<p align="center">
+  <img src=".github/demo.gif" alt="Demo: a script calls the app functions over adb and the task shows up in the Tauri Todo app on the phone" width="100%">
+  <br>
+  <sub>An agent's calls, simulated over <code>adb</code>, reach the Rust functions of
+  <a href="examples/tauri-app">the Tauri Todo example</a>: the task shows up on the phone right away.</sub>
+</p>
+
 > [!WARNING]
 > **Experimental.** Android [AppFunctions](https://developer.android.com/ai/appfunctions) is a
 > new platform feature, and its Jetpack library is still in alpha. Before you ship:
@@ -118,7 +125,8 @@ Build with the Tauri CLI as usual (`tauri android dev` or `tauri android build`)
 the function shows up as `com.plugin.google_app_functions.TauriAppFunctionService#createNote`.
 
 That's all: the Android project from `tauri android init` stays untouched. See
-[examples/tauri-app](examples/tauri-app) for a complete app.
+[examples/tauri-app](examples/tauri-app), a todo list Gemini can add tasks to, for a complete
+app.
 
 ## Compatibility
 
@@ -223,9 +231,10 @@ adb shell "cmd app_function execute-app-function --package com.example.app \
 ```
 
 [examples/tauri-app/test-app-functions.sh](examples/tauri-app/test-app-functions.sh) calls every
-function of the example app, with the app both closed and open.
+function of the example app, with the app both closed and open (build the example with
+`--features test-functions` first).
 
-**With Gemini.** Name the app and the action: _"Create a note in tauri-app titled Groceries"_.
+**With Gemini.** Name the app and the action: _"Add buy milk to my list in Tauri Todo"_.
 If Gemini answers on its own instead, first check that `adb` can call the function; if it can,
 see the Gemini row in [Compatibility](#compatibility).
 
