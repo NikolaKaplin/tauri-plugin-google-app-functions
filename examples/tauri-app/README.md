@@ -5,13 +5,13 @@ A todo list built with Tauri, React and Rust. Its Rust functions are exposed as 
 agents can add, read, finish and delete tasks. When an agent changes the list, the task shows up
 in the app right away, with a Gemini badge.
 
-<p align="center">
-  <img src="../../.github/demo.gif" alt="Demo: app functions called over adb, the task shows up in the app" width="100%">
-</p>
-
 ## Demo
 
-The recording above runs [demo.ps1](demo.ps1): it creates a task, reads it back, lists the open
+<p align="center">
+  <img src="demo.gif" alt="Demo: app functions called over adb, the task shows up in the app" width="100%">
+</p>
+
+The recording runs [demo.ps1](demo.ps1): it creates a task, reads it back, lists the open
 tasks, completes it and asks for a missing one. The same calls one by one:
 
 ### Create a task with adb

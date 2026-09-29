@@ -17,10 +17,7 @@
 </p>
 
 <p align="center">
-  <img src=".github/demo.gif" alt="Demo: a script calls the app functions over adb and the task shows up in the Tauri Todo app on the phone" width="100%">
-  <br>
-  <sub>An agent's calls, simulated over <code>adb</code>, reach the Rust functions of
-  <a href="examples/tauri-app">the Tauri Todo example</a>: the task shows up on the phone right away.</sub>
+  ▶ <a href="examples/tauri-app#demo"><b>See the demo</b></a>: an agent adds a task to a Tauri todo app over <code>adb</code>.
 </p>
 
 > [!WARNING]
