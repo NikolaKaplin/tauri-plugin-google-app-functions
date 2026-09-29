@@ -10,6 +10,8 @@
 </p>
 
 <p align="center">
+  <a href="https://crates.io/crates/tauri-plugin-google-app-functions"><img src="https://img.shields.io/crates/v/tauri-plugin-google-app-functions?logo=rust" alt="crates.io"></a>
+  <a href="https://github.com/NikolaKaplin/tauri-plugin-google-app-functions/actions/workflows/ci.yml"><img src="https://github.com/NikolaKaplin/tauri-plugin-google-app-functions/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/status-experimental-orange" alt="Status: experimental">
   <img src="https://img.shields.io/badge/Android-16%2B-3DDC84?logo=android&logoColor=white" alt="Android 16+">
   <img src="https://img.shields.io/badge/Tauri-2.12%2B-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2.12+">

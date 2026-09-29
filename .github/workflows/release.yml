@@ -1,0 +1,58 @@
+# Publishes the three crates to crates.io and creates a GitHub release.
+#
+# To release: bump `version` under [workspace.package] and the pinned macros version in
+# Cargo.toml, commit, then push a matching tag:
+#
+#   git tag v0.2.0 && git push origin v0.2.0
+#
+# Needs the CARGO_REGISTRY_TOKEN repository secret (crates.io > Account Settings > API Tokens,
+# scopes: publish-new, publish-update).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check the tag matches the crate versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          versions=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | "\(.name) \(.version)"')
+          echo "$versions"
+          if echo "$versions" | awk -v tag="$tag" '$2 != tag { bad = 1 } END { exit !bad }'; then
+            echo "::error::Tag v$tag does not match the crate versions above"
+            exit 1
+          fi
+
+      - name: Install Tauri system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo test --workspace
+
+      # Publishes macros, build and the plugin in dependency order, waiting for each to be
+      # available on crates.io before the next one.
+      - run: cargo publish --workspace
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Create the GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}
