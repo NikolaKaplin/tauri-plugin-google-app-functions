@@ -1,15 +1,15 @@
 [package]
 name = "tauri-plugin-google-app-functions"
-version = "0.1.0"
-authors = ["NikolaKaplin (https://github.com/NikolaKaplin)"]
 description = "Expose Rust functions of a Tauri app as Android AppFunctions"
-repository = "https://github.com/NikolaKaplin/tauri-plugin-google-app-functions"
-license = "MIT"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 readme = "README.md"
 keywords = ["tauri", "tauri-plugin", "android", "gemini", "app-functions"]
 categories = ["gui", "os::android-apis", "api-bindings"]
-edition = "2024"
-rust-version = "1.90"
 exclude = ["/examples", "/.claude", "/.github", "/.vscode"]
 links = "tauri-plugin-google-app-functions"
 
@@ -17,13 +17,22 @@ links = "tauri-plugin-google-app-functions"
 members = ["crates/macros", "crates/build"]
 exclude = ["examples/tauri-app/src-tauri"]
 
+[workspace.package]
+version = "0.1.0"
+authors = ["NikolaKaplin (https://github.com/NikolaKaplin)"]
+repository = "https://github.com/NikolaKaplin/tauri-plugin-google-app-functions"
+license = "MIT"
+edition = "2024"
+rust-version = "1.90"
+
 [dependencies]
 tauri = { version = "2.12.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2"
 inventory = "0.3"
-tauri-plugin-google-app-functions-macros = { version = "0.1.0", path = "crates/macros" }
+# Pinned: the macros emit code against this crate's internals, so both release together.
+tauri-plugin-google-app-functions-macros = { version = "=0.1.0", path = "crates/macros" }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21"

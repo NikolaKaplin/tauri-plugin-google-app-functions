@@ -1,15 +1,15 @@
 [package]
 name = "tauri-plugin-google-app-functions-macros"
-version = "0.1.0"
-authors = ["NikolaKaplin (https://github.com/NikolaKaplin)"]
 description = "Procedural macros for tauri-plugin-google-app-functions"
-repository = "https://github.com/NikolaKaplin/tauri-plugin-google-app-functions"
-license = "MIT"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 readme = "README.md"
 keywords = ["tauri", "tauri-plugin", "android", "app-functions"]
 categories = ["development-tools::procedural-macro-helpers"]
-edition = "2024"
-rust-version = "1.90"
 
 [lib]
 proc-macro = true
