@@ -269,6 +269,10 @@ flowchart TB
 4. On a call, the service converts the arguments to JSON, runs the Rust function on Tauri's
    async runtime and converts the result or error back.
 
+## License
+
+[MIT](LICENSE)
+
 ---
 
 <sub>Tauri and Gemini names and logos are trademarks of their respective owners. This project is

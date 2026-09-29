@@ -2,7 +2,12 @@
 name = "tauri-plugin-google-app-functions-build"
 version = "0.1.0"
 authors = ["NikolaKaplin (https://github.com/NikolaKaplin)"]
-description = "build.rs helper that generates the Android AppFunctions Kotlin service for tauri-plugin-google-app-functions"
+description = "build.rs helper that generates the Android AppFunctions schema for tauri-plugin-google-app-functions"
+repository = "https://github.com/NikolaKaplin/tauri-plugin-google-app-functions"
+license = "MIT"
+readme = "README.md"
+keywords = ["tauri", "tauri-plugin", "android", "app-functions"]
+categories = ["development-tools::build-utils"]
 edition = "2024"
 rust-version = "1.90"
 
