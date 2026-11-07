@@ -191,9 +191,10 @@ that names the parameter.
 - **Names.** `snake_case` becomes `camelCase` for functions, parameters and fields:
   `create_note` is `createNote` to agents.
 - **The app handle.** A `tauri::AppHandle` parameter is filled in by the plugin and hidden from
-  agents. Use it to reach managed state with `app.state::<T>()`. It exists only while the app is
-  open: when Android starts the function in the background, such a function fails with
-  _"the app is not running"_. Functions without it always work.
+  agents. Use it to reach managed state with `app.state::<T>()`. It is available after Tauri
+  initializes, while its runtime remains alive. A cold AppFunctions service start does not
+  initialize Tauri, so a function requiring the handle fails with _"the app is not running"_.
+  Handlers without it can initialize their own state and run without the UI.
 - **Errors.** Return `Result<T, E>` with `E: Into<AppFunctionError>`. Each variant maps to an
   AppFunctions error code: `InvalidArgument`, `ElementNotFound`, `ElementAlreadyExists`,
   `PermissionRequired`, `NotSupported`, `Disabled`, `LimitExceeded`, `Cancelled`, `Unknown`.
