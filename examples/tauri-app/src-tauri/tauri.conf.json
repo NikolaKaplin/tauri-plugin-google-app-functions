@@ -1,5 +1,5 @@
 {
-  "productName": "Tauri Todo",
+  "productName": "Small Hours",
   "version": "0.1.0",
   "identifier": "com.tauri.dev",
   "build": {
@@ -18,7 +18,7 @@
         "fullscreen": false,
         "height": 820,
         "resizable": true,
-        "title": "Tauri Todo",
+        "title": "Small Hours",
         "width": 440
       }
     ]

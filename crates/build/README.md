@@ -10,7 +10,7 @@ needs no Kotlin, KSP or Gradle changes.
 ```toml
 # src-tauri/Cargo.toml
 [build-dependencies]
-tauri-plugin-google-app-functions-build = "0.1"
+tauri-plugin-google-app-functions-build = "0.2"
 ```
 
 ```rust

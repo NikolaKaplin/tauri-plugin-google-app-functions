@@ -1,6 +1,10 @@
 //! JNI entry point called by `AppFunctionsBridge.kt` for every app function execution.
 
-use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::{
+  panic::{AssertUnwindSafe, catch_unwind},
+  path::PathBuf,
+  sync::OnceLock,
+};
 
 use jni::{
   JNIEnv,
@@ -11,6 +15,18 @@ use serde_json::{Value, json};
 
 use crate::registry::{self, AppFunctionError};
 
+static APP_DATA_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+/// Returns Android's private application data directory, supplied by the AppFunctions service.
+///
+/// Available during app function execution, including a cold service start without Tauri or
+/// a WebView. This is the same directory as Tauri's `app.path().app_data_dir()` on Android.
+pub fn android_app_data_dir() -> Result<PathBuf, AppFunctionError> {
+  APP_DATA_DIR.get().cloned().ok_or_else(|| {
+    AppFunctionError::Unknown("the AppFunctions service has not supplied its data directory".into())
+  })
+}
+
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_plugin_google_1app_1functions_AppFunctionsBridge_nativeInvoke<
   'local,
@@ -19,16 +35,24 @@ pub extern "system" fn Java_com_plugin_google_1app_1functions_AppFunctionsBridge
   _class: JClass<'local>,
   function: JString<'local>,
   args: JString<'local>,
+  app_data_dir: JString<'local>,
 ) -> jstring {
-  let result = catch_unwind(AssertUnwindSafe(|| invoke(&mut env, &function, &args)))
-    .unwrap_or_else(|panic| {
-      let message = panic
-        .downcast_ref::<&str>()
-        .map(|s| s.to_string())
-        .or_else(|| panic.downcast_ref::<String>().cloned())
-        .unwrap_or_else(|| "app function panicked".to_owned());
-      Err(AppFunctionError::Unknown(message))
-    });
+  let result = catch_unwind(AssertUnwindSafe(|| {
+    let path: String = env
+      .get_string(&app_data_dir)
+      .map_err(|e| AppFunctionError::Unknown(e.to_string()))?
+      .into();
+    let _ = APP_DATA_DIR.set(PathBuf::from(path));
+    invoke(&mut env, &function, &args)
+  }))
+  .unwrap_or_else(|panic| {
+    let message = panic
+      .downcast_ref::<&str>()
+      .map(|s| s.to_string())
+      .or_else(|| panic.downcast_ref::<String>().cloned())
+      .unwrap_or_else(|| "app function panicked".to_owned());
+    Err(AppFunctionError::Unknown(message))
+  });
 
   let response = match result {
     Ok(value) => json!({ "ok": value }),

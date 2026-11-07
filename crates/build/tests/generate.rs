@@ -116,7 +116,7 @@ fn generates_android_files() {
   }
 
   let metadata = read(&project.join("app/src/main/res/xml/tauri_app_functions_metadata.xml"));
-  assert!(metadata.contains("appfn:description=\"Manages &quot;tasks&quot; &amp; more\""));
+  assert!(metadata.contains("appfn:instructions=\"Manages &quot;tasks&quot; &amp; more\""));
   assert!(
     !kotlin.join("TauriAppFunctions.kt").exists(),
     "stale KSP input must be removed"

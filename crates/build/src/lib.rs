@@ -49,6 +49,7 @@ impl Builder {
 
   /// Describes the app to agents: what it does and when to use which function. Written to
   /// `res/xml/tauri_app_functions_metadata.xml` in the Android app module.
+  /// Uses the AppFunctions `instructions` XML attribute.
   pub fn app_description(mut self, description: impl Into<String>) -> Self {
     self.app_description = Some(description.into());
     self

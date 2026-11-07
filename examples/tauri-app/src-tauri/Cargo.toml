@@ -21,6 +21,9 @@ tauri = { version = "2.12.0", features = [] }
 tauri-plugin-google-app-functions = { path = "../../../" }
 serde_json = "1"
 
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+
 [features]
 # App functions that test every type mapping and error path; used by test-app-functions.sh.
 test-functions = []

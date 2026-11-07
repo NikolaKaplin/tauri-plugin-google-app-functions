@@ -19,18 +19,20 @@
 </p>
 
 <p align="center">
-  ▶ <a href="examples/tauri-app#demo"><b>See the demo</b></a>: an agent adds a task to a Tauri todo app over <code>adb</code>.
+  ▶ <a href="examples/tauri-app/demo.mp4"><b>Watch the music demo</b></a>: a two-track player controlled through Android AppFunctions, including with its interface closed.
 </p>
 
 > [!WARNING]
 > **Experimental.** Android [AppFunctions](https://developer.android.com/ai/appfunctions) is a
-> new platform feature, and its Jetpack library is still in alpha. Before you ship:
+> new platform feature, and this release uses Jetpack AppFunctions `1.0.0-rc01`. Before you ship:
 >
 > - Whether **Gemini** calls functions of your app is decided by Google and differs by device,
 >   region and Gemini version. See [Compatibility](#compatibility).
 > - This plugin is `0.x`: function IDs, generated files and APIs may change between releases.
 
 ## Contents
+
+See [the 0.2.0 release notes and upgrade instructions](CHANGELOG.md) when migrating from 0.1.
 
 - [What you get](#what-you-get)
 - [Quick start](#quick-start)
@@ -61,10 +63,10 @@
 
 ```toml
 [dependencies]
-tauri-plugin-google-app-functions = "0.1"
+tauri-plugin-google-app-functions = "0.2"
 
 [build-dependencies]
-tauri-plugin-google-app-functions-build = "0.1"
+tauri-plugin-google-app-functions-build = "0.2"
 ```
 
 **2. Generate the schema** in `src-tauri/build.rs`:
@@ -124,8 +126,13 @@ Build with the Tauri CLI as usual (`tauri android dev` or `tauri android build`)
 the function shows up as `com.plugin.google_app_functions.TauriAppFunctionService#createNote`.
 
 That's all: the Android project from `tauri android init` stays untouched. See
-[examples/tauri-app](examples/tauri-app), a todo list Gemini can add tasks to, for a complete
-app.
+[examples/tauri-app](examples/tauri-app), a minimal two-track music player with background
+playback and a PowerShell test for AppFunction track switching.
+
+The example's task functions also work with the UI closed: they lazily load a shared Rust
+store without an `AppHandle`. On Android, `android_app_data_dir()` supplies the private data
+directory during AppFunction execution without starting Tauri. See the
+[background demo](examples/tauri-app#how-this-small-example-works) and its PowerShell script.
 
 ## Compatibility
 

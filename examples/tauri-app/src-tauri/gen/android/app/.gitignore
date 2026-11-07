@@ -3,5 +3,7 @@
 /src/main/assets/tauri.conf.json
 /tauri.build.gradle.kts
 /proguard-tauri.pro
+/proguard-music.pro
+/src/main/assets/music/
 /tauri.properties
 /src/main/res/xml/tauri_app_functions_metadata.xml

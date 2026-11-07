@@ -1,80 +1,75 @@
-# Tauri Todo: a demo of tauri-plugin-google-app-functions
+# Small Hours: a minimal Android music example
 
-A todo list built with Tauri, React and Rust. Its Rust functions are exposed as Android
-[AppFunctions](https://developer.android.com/ai/appfunctions), so Gemini and other on-device
-agents can add, read, finish and delete tasks. When an agent changes the list, the task shows up
-in the app right away, with a Gemini badge.
+Two bundled tracks, play/pause, previous and next. The interface uses
+[Radix Themes](https://www.radix-ui.com/themes/docs/overview/getting-started), inspired by its
+[music app example](https://www.radix-ui.com/themes/example-music-app).
 
 ## Demo
 
-<p align="center">
-  <img src="demo.gif" alt="Demo: app functions called over adb, the task shows up in the app" width="100%">
-</p>
+[Watch the music demo (MP4)](demo.mp4). The same video is attached to the GitHub release.
 
-The recording runs [demo.ps1](demo.ps1): it creates a task, reads it back, lists the open
-tasks, completes it and asks for a missing one. The same calls one by one:
+## Run
 
-### Create a task with adb
+Requires the Tauri Android toolchain and an Android 16+ device or emulator for AppFunctions.
+From this directory:
 
-```sh
-adb shell "cmd app_function execute-app-function --package com.tauri.dev \
-  --function 'com.plugin.google_app_functions.TauriAppFunctionService#createTask' \
-  --parameters '{\"title\": \"Buy milk\", \"notes\": \"2 liters\"}'"
-```
-
-### View a task with adb
-
-```sh
-adb shell "cmd app_function execute-app-function --package com.tauri.dev \
-  --function 'com.plugin.google_app_functions.TauriAppFunctionService#getTask' \
-  --parameters '{\"id\": 1}'"
-```
-
-### Ask Gemini
-
-> _"Add buy milk to my list in Tauri Todo"_
-
-Whether Gemini calls the app depends on Google's rollout; see
-[Compatibility](../../README.md#compatibility).
-
-## App functions
-
-| Function | What it does |
-| --- | --- |
-| `createTask(title, notes?)` | Adds a task and returns it with its ID. |
-| `listTasks(includeDone?)` | Lists the tasks, oldest first; `includeDone = false` leaves out finished ones. |
-| `getTask(id)` | Returns one task, or `ElementNotFound`. |
-| `completeTask(id)` | Marks a task as done. |
-| `deleteTask(id)` | Deletes a task. |
-
-All of them live in [src-tauri/src/lib.rs](src-tauri/src/lib.rs); the list itself is in
-[src-tauri/src/tasks.rs](src-tauri/src/tasks.rs) and is saved to the app's data directory. The
-functions take a `tauri::AppHandle`, so they need the app to be open: while it is closed, they
-fail with _"the app is not running"_.
-
-## Run it
-
-Requires an Android 16+ device or emulator (see [Compatibility](../../README.md#compatibility)).
-
-```sh
+```powershell
 npm install
-npm run tauri android dev
+npm run tauri -- android dev
 ```
 
-Then list what the system indexed:
+The tracks are original, synthesized 16-second loops: **Morning Loop** and **Night Drive**.
+They are bundled with the app and loop continuously, with no network requests. Press a cover
+or use the player controls. Closing the interface does not stop playback.
 
-```sh
-adb shell cmd app_function list-app-functions | grep -A2 com.tauri.dev
+## Test from PowerShell with the interface closed
+
+After installing the updated app:
+
+```powershell
+.\test-music.ps1
 ```
 
-## Tests
+The script finds `adb`, force-stops the app, plays a track, switches next and previous, pauses,
+and checks that no application Activity was opened. It also tests the system MediaSession's
+Next, Previous, Pause and Play commands. It waits three seconds between switches
+so you can hear the tracks. Playback is paused on completion, including after a failed check.
+Use `-ListenSeconds 5` for longer pauses. No `test-functions` feature is needed.
 
-[test-app-functions.sh](test-app-functions.sh) calls every function over `adb`, with the app
-closed and open, including a set of test functions that cover every supported type and error
-code. The test functions are only built with a feature flag, so agents don't see them in the
-demo:
+| AppFunction | Action |
+| --- | --- |
+| `playMusic` | Play/resume the current track |
+| `pauseMusic` | Pause playback |
+| `nextTrack` | Play the other track |
+| `previousTrack` | Play the previous track |
+| `playbackState` | Read the title, track ID and playing state |
 
-```sh
-npm run tauri android dev -- --features test-functions
-./test-app-functions.sh
-```
+## How this small example works
+
+- `src/App.tsx`: a compact Radix library, queue, volume control and bottom player. Local cover
+  images are memoized separately from playback controls and the progress clock.
+- `src/music.ts`: one initial state read, then `music-playback` events from Rust. There is no
+  interval polling. Commands are queued, so quick Next/Previous presses are not discarded.
+- `src-tauri/src/music.rs`: the same native player is called from UI commands and Rust
+  AppFunctions. AppFunctions do not require an `AppHandle`.
+- `src-tauri/android-music/MusicService.kt`: an Android `mediaPlayback` foreground service
+  owns `MediaPlayer`. An initialization provider makes the bridge available even when
+  the process starts without Tauri's Activity. There is no WebView audio element.
+- `src-tauri/build.rs`: copies the example-only Kotlin and audio into the generated Android
+  project and registers its provider, service and foreground-service permissions.
+
+A system media notification shows the current cover, title, progress, Previous, Play/Pause
+and Next buttons. The same MediaSession handles lock-screen/headset controls and seeking.
+Playback handles audio focus and resumes the same track position after pause. The UI receives
+changes from notification controls too, without polling or reloading the library artwork.
+This small example has no streaming. Force-stopping the process stops the music; the next
+AppFunction can start it again.
+
+The root Android Back action moves the music screen's task to the background, allowing the
+foreground playback service to continue. Reopening the app restores the existing screen.
+
+Regenerate the audio with Python: `python src-tauri/android-music/generate_tracks.py`.
+The two original loops are included under the repository's MIT license.
+
+The earlier todo functions and `demo.ps1` remain available as a separate background-state
+example. The visible interface is now the music player.

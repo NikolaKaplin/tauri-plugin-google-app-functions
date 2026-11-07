@@ -1,9 +1,12 @@
+mod music;
 mod tasks;
 #[cfg(feature = "test-functions")]
 #[path = "../test_functions/mod.rs"]
 mod test_functions;
 
-use tauri::{AppHandle, Manager, State};
+use std::sync::Arc;
+
+use tauri::{Manager, State};
 use tauri_plugin_google_app_functions::{AppFunctionError, app_function};
 
 use tasks::{Task, TaskStore};
@@ -19,12 +22,8 @@ use tasks::{Task, TaskStore};
 /// # Returns
 /// The new task with its ID.
 #[app_function]
-fn create_task(
-  app: AppHandle,
-  title: String,
-  notes: Option<String>,
-) -> Result<Task, AppFunctionError> {
-  app.state::<TaskStore>().add(&app, title, notes, true)
+fn create_task(title: String, notes: Option<String>) -> Result<Task, AppFunctionError> {
+  tasks::store()?.add(title, notes, true)
 }
 
 /// Lists the tasks in the user's todo list, oldest first.
@@ -32,12 +31,12 @@ fn create_task(
 /// # Arguments
 /// * `include_done` - Whether to include finished tasks. Defaults to true.
 #[app_function]
-fn list_tasks(app: AppHandle, include_done: Option<bool>) -> Vec<Task> {
-  let tasks = app.state::<TaskStore>().all();
-  match include_done {
+fn list_tasks(include_done: Option<bool>) -> Result<Vec<Task>, AppFunctionError> {
+  let tasks = tasks::store()?.all();
+  Ok(match include_done {
     Some(false) => tasks.into_iter().filter(|t| !t.done).collect(),
     _ => tasks,
-  }
+  })
 }
 
 /// Returns one task of the todo list.
@@ -45,8 +44,8 @@ fn list_tasks(app: AppHandle, include_done: Option<bool>) -> Vec<Task> {
 /// # Arguments
 /// * `id` - ID of the task, as returned by `listTasks` or `createTask`.
 #[app_function]
-fn get_task(app: AppHandle, id: i64) -> Result<Task, AppFunctionError> {
-  app.state::<TaskStore>().get(id)
+fn get_task(id: i64) -> Result<Task, AppFunctionError> {
+  tasks::store()?.get(id)
 }
 
 /// Marks a task as done.
@@ -57,8 +56,8 @@ fn get_task(app: AppHandle, id: i64) -> Result<Task, AppFunctionError> {
 /// # Returns
 /// The updated task.
 #[app_function]
-fn complete_task(app: AppHandle, id: i64) -> Result<Task, AppFunctionError> {
-  app.state::<TaskStore>().set_done(&app, id, true)
+fn complete_task(id: i64) -> Result<Task, AppFunctionError> {
+  tasks::store()?.set_done(id, true)
 }
 
 /// Deletes a task from the todo list.
@@ -66,55 +65,51 @@ fn complete_task(app: AppHandle, id: i64) -> Result<Task, AppFunctionError> {
 /// # Arguments
 /// * `id` - ID of the task to delete.
 #[app_function]
-fn delete_task(app: AppHandle, id: i64) -> Result<(), AppFunctionError> {
-  app.state::<TaskStore>().remove(&app, id)
+fn delete_task(id: i64) -> Result<(), AppFunctionError> {
+  tasks::store()?.remove(id)
 }
 
 // ----- Commands: what the app's own UI calls -----
 
 #[tauri::command]
-fn tasks(store: State<TaskStore>) -> Vec<Task> {
+fn tasks(store: State<Arc<TaskStore>>) -> Vec<Task> {
   store.all()
 }
 
 #[tauri::command]
-fn add_task(
-  app: AppHandle,
-  store: State<TaskStore>,
-  title: String,
-) -> Result<Task, AppFunctionError> {
-  store.add(&app, title, None, false)
+fn add_task(store: State<Arc<TaskStore>>, title: String) -> Result<Task, AppFunctionError> {
+  store.add(title, None, false)
 }
 
 #[tauri::command]
 fn set_task_done(
-  app: AppHandle,
-  store: State<TaskStore>,
+  store: State<Arc<TaskStore>>,
   id: i64,
   done: bool,
 ) -> Result<Task, AppFunctionError> {
-  store.set_done(&app, id, done)
+  store.set_done(id, done)
 }
 
 #[tauri::command]
-fn remove_task(app: AppHandle, store: State<TaskStore>, id: i64) -> Result<(), AppFunctionError> {
-  store.remove(&app, id)
+fn remove_task(store: State<Arc<TaskStore>>, id: i64) -> Result<(), AppFunctionError> {
+  store.remove(id)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_google_app_functions::init())
-    .manage(TaskStore::default())
     .setup(|app| {
-      app.state::<TaskStore>().load(app.handle())?;
+      let store = tasks::initialize(app.path().app_data_dir()?)?;
+      app.manage(store);
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
       tasks,
       add_task,
       set_task_done,
-      remove_task
+      remove_task,
+      music::music_command
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

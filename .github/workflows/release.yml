@@ -1,7 +1,7 @@
 # Publishes the three crates to crates.io and creates a GitHub release.
 #
 # To release: bump `version` under [workspace.package] and the pinned macros version in
-# Cargo.toml, commit, then push a matching tag:
+# Cargo.toml, add a matching CHANGELOG.md entry, commit, then push a matching tag:
 #
 #   git tag v0.2.0 && git push origin v0.2.0
 #
@@ -56,6 +56,12 @@ jobs:
         run: rm -rf target/package
 
       - name: Create the GitHub release
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+        run: |
+          awk -v version="${GITHUB_REF_NAME#v}" '
+            /^## / { if (found) exit; found = ($2 == version); next }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
+          gh release create "$GITHUB_REF_NAME" examples/tauri-app/demo.mp4 --verify-tag --notes-file release-notes.md --title "$GITHUB_REF_NAME"
         env:
           GH_TOKEN: ${{ github.token }}

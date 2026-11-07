@@ -28,7 +28,7 @@ kotlin {
 
 dependencies {
     // Supplies the app_functions_schema.xsd asset and the matching manifest property.
-    implementation("androidx.appfunctions:appfunctions:1.0.0-alpha12")
+    implementation("androidx.appfunctions:appfunctions:1.0.0-rc01")
     implementation(project(":tauri-android"))
 }
 

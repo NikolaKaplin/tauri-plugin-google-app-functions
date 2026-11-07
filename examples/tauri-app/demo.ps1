@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-  Walks through the Tauri Todo app functions over adb: create, view, list and complete a task.
+  Checks Tauri Todo app functions with the UI closed: create, read, list and complete a task.
 
 .EXAMPLE
   .\demo.ps1
@@ -90,7 +90,13 @@ function Invoke-Adb {
   # adb reports progress on stderr; don't let that stop the script.
   $ErrorActionPreference = "Continue"
   $output = & $script:Adb @args 2>&1
-  return ($output | ForEach-Object { "$_" }) -join "`n"
+  $exitCode = $LASTEXITCODE
+  $text = ($output | ForEach-Object { "$_" }) -join "`n"
+  # The shell returns 255 for typed AppFunction errors; the caller validates their code.
+  if ($exitCode -ne 0 -and $text -notmatch 'AppFunctionException:') {
+    throw "adb failed (exit ${exitCode}): $text"
+  }
+  return $text
 }
 
 # PowerShell 5.1 mangles quotes in native arguments, so the command goes to the device as a file.
@@ -132,7 +138,7 @@ function Invoke-AppFunction([string]$Name, $Parameters, [switch]$ReturnsList) {
     $code = [int]$Matches[2]
     $kind = $ErrorNames[$code]
     if (-not $kind) { $kind = "Error" }
-    return [pscustomobject]@{ Ok = $false; Error = "$kind ($code): $($Matches[1])" }
+    return [pscustomobject]@{ Ok = $false; Code = $code; Error = "$kind ($code): $($Matches[1])" }
   }
   if ($output -match "No shell command implementation") {
     Stop-Demo "This Android build has no 'cmd app_function'." "Use an Android 16 QPR or Android 17 emulator image."
@@ -174,19 +180,25 @@ if ($sdk -lt 36) { Stop-Demo "Android API ${sdk}: App Functions need Android 16 
 Write-Ok "Android API $sdk"
 
 if (-not ((Invoke-Adb shell pm list packages $Package) -match "package:$Package")) {
-  Stop-Demo "Tauri Todo ($Package) is not installed." "Run: npm run tauri android dev"
+  Stop-Demo "Tauri Todo ($Package) is not installed." "Run: npm run tauri -- android dev"
 }
 Write-Ok "Tauri Todo is installed"
 
-if (-not ((Invoke-Adb shell dumpsys app_function) -match [regex]::Escape("$Service#createTask"))) {
-  Stop-Demo "Android has not indexed the app functions." "Reinstall the app; early Android 16 builds never index them."
+$index = (Invoke-Adb shell cmd app_function list-app-functions) | ConvertFrom-Json
+$indexedFunctions = @($index.$Package | ForEach-Object {
+  $_."AppFunctionStaticMetadata-$Package".functionId
+})
+foreach ($name in @("createTask", "getTask", "listTasks", "completeTask", "deleteTask")) {
+  if ($indexedFunctions -notcontains "$Service#$name") {
+    Stop-Demo "Android has not indexed $name." "Rebuild and reinstall the app through the Tauri CLI."
+  }
 }
-Write-Ok "app functions are indexed"
+Write-Ok "all five app functions are indexed"
 Wait-Step
 
-Write-Step 2 "Opening Tauri Todo"
-[void](Invoke-Adb shell monkey -p $Package -c android.intent.category.LAUNCHER 1)
-Write-Ok "launched; the functions below need the app open"
+Write-Step 2 "Stopping Tauri Todo for a cold service start"
+[void](Invoke-Adb shell am force-stop $Package)
+Write-Ok "app stopped; no launcher Activity will be started"
 Wait-Step
 
 Write-Step 3 "createTask: an agent adds a task"
@@ -198,35 +210,63 @@ for ($attempt = 1; $attempt -le 10; $attempt++) {
 }
 if (-not $created.Ok) { Stop-Demo $created.Error }
 $task = $created.Value
+if (-not $task.id -or $task.title -cne $Title -or $task.notes -cne $Notes -or -not $task.fromAgent) {
+  Stop-Demo "createTask returned unexpected task data."
+}
 Write-Task $task
-Write-Ok "look at the phone: the task appeared with a Gemini badge"
+Write-Ok "created in the background; the app UI should remain closed"
 Wait-Step
 
 Write-Step 4 "getTask: read it back by ID"
 $fetched = Invoke-AppFunction "getTask" ([ordered]@{ id = $task.id })
 if (-not $fetched.Ok) { Stop-Demo $fetched.Error }
+if ($fetched.Value.id -ne $task.id -or $fetched.Value.title -cne $Title) {
+  Stop-Demo "getTask did not return the created task."
+}
 Write-Task $fetched.Value
 Wait-Step
 
 Write-Step 5 "listTasks: what is still to do"
 $open = Invoke-AppFunction "listTasks" ([ordered]@{ includeDone = $false }) -ReturnsList
 if (-not $open.Ok) { Stop-Demo $open.Error }
+if (@($open.Value | Where-Object { $_.id -eq $task.id -and -not $_.done }).Count -ne 1) {
+  Stop-Demo "listTasks did not include the created task."
+}
 $open.Value | ForEach-Object { Write-Task $_ }
 Wait-Step
 
 Write-Step 6 "completeTask: tick it off"
 $completed = Invoke-AppFunction "completeTask" ([ordered]@{ id = $task.id })
 if (-not $completed.Ok) { Stop-Demo $completed.Error }
+if ($completed.Value.id -ne $task.id -or -not $completed.Value.done) {
+  Stop-Demo "completeTask did not mark the created task as done."
+}
 Write-Task $completed.Value
 Wait-Step
 
 Write-Step 7 "getTask with a wrong ID: errors come back typed"
 $missing = Invoke-AppFunction "getTask" ([ordered]@{ id = 999999 })
 if ($missing.Ok) { Stop-Demo "expected an error for a missing task" }
+if ($missing.Code -ne 1500) { Stop-Demo "expected ElementNotFound (1500), got: $($missing.Error)" }
 Write-Ok $missing.Error
 
+Write-Step 8 "Checking persistence after another process stop"
+[void](Invoke-Adb shell am force-stop $Package)
+$restored = Invoke-AppFunction "getTask" ([ordered]@{ id = $task.id })
+if (-not $restored.Ok) { Stop-Demo $restored.Error }
+if ($restored.Value.id -ne $task.id -or -not $restored.Value.done -or $restored.Value.title -cne $Title) {
+  Stop-Demo "the completed task did not survive the process restart"
+}
+Write-Ok "task restored without opening the UI"
+
+$activities = Invoke-Adb shell dumpsys activity activities
+if ($activities -match "(?m)^.*(?:ActivityRecord\{|mResumedActivity|topResumedActivity).*$([regex]::Escape($Package))/") {
+  Stop-Demo "a Tauri Todo Activity was started during the background demo"
+}
+Write-Ok "no Tauri Todo Activity exists"
+
 Write-Host ""
-Write-Host "   All app functions answered. " -ForegroundColor Green -NoNewline
+Write-Host "   Demo checks passed. " -ForegroundColor Green -NoNewline
 Write-Host "Now try Gemini: " -ForegroundColor DarkGray -NoNewline
 Write-Host "`"Add buy milk to my list in Tauri Todo`"" -ForegroundColor White
 Write-Host ""

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Calls every app function of the example on a connected device/emulator (Android 16+).
 # Build the app with the test functions first:
-#   npm run tauri android dev -- --features test-functions
+#   npm run tauri -- android dev --features test-functions
 # Usage: ./test-app-functions.sh [path/to/app.apk]
 set -u
 
@@ -42,13 +42,13 @@ for kind in invalidArgument elementNotFound elementAlreadyExists permissionRequi
 done
 call testPanic '{}' 'AppUnknown error "test panic from Rust", app keeps running'
 call testAppName '{}' 'error: the app is not running'
-call createTask '{"title": "x"}' 'error: the app is not running'
+call createTask '{"title": "Background task"}' 'new task; UI stays closed'
 
 echo
 echo "##### Opening the app"
 "$ADB" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 > /dev/null
 sleep 5
-call testAppName '{}' '"Tauri Todo"'
+call testAppName '{}' '"Small Hours"'
 call createTask '{"title": "Buy milk", "notes": "2 liters"}' 'new task, fromAgent true; shows up in the app'
 call createTask '{"title": "  "}' 'InvalidArgument: title must not be empty'
 call listTasks '{}' 'all tasks'

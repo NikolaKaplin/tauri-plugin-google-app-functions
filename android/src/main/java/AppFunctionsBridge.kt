@@ -20,7 +20,7 @@ internal object AppFunctionsBridge {
     private val loadedLibraries = mutableSetOf<String>()
 
     @JvmStatic
-    private external fun nativeInvoke(function: String, argsJson: String): String
+    private external fun nativeInvoke(function: String, argsJson: String, appDataDir: String): String
 
     /**
      * Runs the Rust function [function] with [args], blocking until it returns, and returns its
@@ -30,11 +30,11 @@ internal object AppFunctionsBridge {
      *
      * @throws AppFunctionException if the function returned an error.
      */
-    fun call(library: String, function: String, args: JSONObject): Any? {
+    fun call(library: String, function: String, args: JSONObject, appDataDir: String): Any? {
         synchronized(loadedLibraries) {
             if (loadedLibraries.add(library)) System.loadLibrary(library)
         }
-        val response = JSONObject(nativeInvoke(function, args.toString()))
+        val response = JSONObject(nativeInvoke(function, args.toString(), appDataDir))
         val error = response.optJSONObject("error")
         if (error != null) throw toException(error)
         return response.opt("ok")

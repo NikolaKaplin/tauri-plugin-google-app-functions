@@ -62,7 +62,7 @@ class TauriAppFunctionService : AppFunctionService() {
                 "${request.functionIdentifier} is not available",
             )
         val args = types.toJson(request.parameters, function.params)
-        val result = AppFunctionsBridge.call(types.library, function.name, args)
+        val result = AppFunctionsBridge.call(types.library, function.name, args, applicationInfo.dataDir)
         return ExecuteAppFunctionResponse(types.toResponse(result, function.returns))
     }
 }

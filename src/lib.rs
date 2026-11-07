@@ -38,6 +38,9 @@ pub use tauri_plugin_google_app_functions_macros::{app_function, app_function_se
 #[cfg(target_os = "android")]
 mod android;
 
+#[cfg(target_os = "android")]
+pub use android::android_app_data_dir;
+
 mod error;
 mod registry;
 
